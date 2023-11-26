@@ -1,11 +1,15 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import yaml
 
-CLUSTER_NUM = 3 # 設定要產生的群數量
-MIN_POINTS = 1 # 每個群的最小資料點數量
-MAX_POINTS = 100 # 每個群的最大資料點數量
-DISTRIBUTE_FACTOR = 5 # 設定資料分布的離散程度
-SPACE_SIZE = 100 # 定義分布空間大小
+with open('../parameter.yaml', 'r', encoding='utf-8') as file:
+    config = yaml.safe_load(file)
+
+CLUSTER_NUM = config['CLUSTER_NUM']
+MIN_POINTS = config['MIN_POINTS']
+MAX_POINTS = config['MAX_POINTS']
+SPACE_SIZE = config['SPACE_SIZE']
+DISTRIBUTE_FACTOR = config['DISTRIBUTE_FACTOR']
 
 # 產生隨機資料
 data = []

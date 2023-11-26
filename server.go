@@ -12,7 +12,7 @@ import (
 
 func home(c echo.Context) error {
 	// 讀取檔案
-	file, err := os.Open("../generate/data/data.txt")
+	file, err := os.Open("./generate/data/data.txt")
 	if err != nil {
 		fmt.Println("open file failed!, err:", err)
 	}

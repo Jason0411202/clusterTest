@@ -1,0 +1,5 @@
+CLUSTER_NUM: 3  # 設定要產生的群數量
+MIN_POINTS: 1  # 每個群的最小資料點數量
+MAX_POINTS: 100  # 每個群的最大資料點數量
+DISTRIBUTE_FACTOR: 5  # 設定資料分布的離散程度
+SPACE_SIZE: 100  # 定義分布空間大小
