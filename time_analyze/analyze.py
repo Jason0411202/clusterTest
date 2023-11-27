@@ -31,4 +31,7 @@ plt.xticks(rotation=45)
 plt.grid(True)
 plt.tight_layout()
 
-plt.show()
+# plt.show()
+
+# 寫檔
+plt.savefig('result.png')
