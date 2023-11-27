@@ -13,10 +13,15 @@
     * R 的部分，移動至RTest.R所在的資料夾中，執行該程式進行分群 (針對不同大小的資料集，為確保每次執行的條件相同，需修改parameter.yaml中的NOW_MULTIPLE)
 
 # python
+* Python version 3.11.3
 * 分群演算法採用KMeans演算法
 * 程式第一次呼叫Kmean function 時，耗時較長；重復呼叫時，耗時較短
 
 # R
+* R version 4.1.2 (2021-11-01)
 * 分群演算法採用kmeans演算法
 * 在資料量極大的時候，圖無法順利存檔
 * 繪圖並存檔的速度慢
+
+# Go
+* go version go1.21.4 windows/amd64
