@@ -62,11 +62,6 @@ if response.status_code == 200:
             color='blue'
         )
 
-    # plt.show()
-    plt.savefig('./data/result_' + str(multiple) + '.png')
-
-
-
     # 計時結束
     end = time.time()
     print("time: ", end-start)
@@ -79,4 +74,7 @@ if response.status_code == 200:
     data['time_'+str(multiple)] = end-start
     with open('./data/time.yaml', 'w') as file:
         yaml.dump(data, file)
+
+    # plt.show()
+    plt.savefig('./data/result_' + str(multiple) + '.png')
     
