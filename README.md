@@ -7,3 +7,7 @@
 # python
 * 分群演算法採用sklearn套件中的KMeans演算法
 * 程式第一次呼叫Kmean function 時，耗時較長
+
+# R
+* 在資料量極大的時候，圖無法順利存檔
+* 繪圖並存檔的速度慢

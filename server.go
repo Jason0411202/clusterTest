@@ -43,7 +43,8 @@ func home(c echo.Context) error {
 			data = append(data, dataPoint)
 		}
 
-		jsonData, err := json.MarshalIndent(data, "", "  ")
+		// jsonData, err := json.MarshalIndent(data, "", "  ")
+		jsonData, err := json.Marshal(data)
 		if err != nil {
 			fmt.Println("MarshalIndent failed!, err:", err)
 		}
