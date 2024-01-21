@@ -3,36 +3,39 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
+	"math"
 	"net/http"
 	"os"
 	"strconv"
 	"time"
 
 	"github.com/go-yaml/yaml"
+	"github.com/muesli/clusters"
+	"github.com/muesli/kmeans"
+	"gonum.org/v1/plot"
+	"gonum.org/v1/plot/plotter"
+	"gonum.org/v1/plot/plotutil"
+	"gonum.org/v1/plot/vg"
 )
 
 type DataPoint struct {
 	X string `json:"x"`
 	Y string `json:"y"`
-	// 如果有其他屬性，可以在這裡添加
 }
 
 func main() {
-	// 讀取配置文件
+	// 讀取參數
 	config, err := readConfig("../parameter.yaml")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	//clusterNum := config.ClusterNum
-	nowMultiple := config.NowMultiple
-
-	multiple := nowMultiple
+	clusterNum := config.ClusterNum
+	multiple := config.NowMultiple
 
 	// 計時開始
-	//start := time.Now()
+	start := time.Now()
 
 	// 發送 HTTP request
 	url := fmt.Sprintf("http://localhost:8000?size=%d", multiple)
@@ -63,38 +66,92 @@ func main() {
 			return
 		}
 
-		fmt.Println("rawPoints:", rawPoints)
+		// 將資料轉換為 kmeans 套件需要的格式
+		var d clusters.Observations
+		for _, point := range rawPoints {
+			x_string, _ := point["x"].(string)
+			x, _ := strconv.ParseFloat(x_string, 64)
+			y_string, _ := point["y"].(string)
+			y, _ := strconv.ParseFloat(y_string, 64)
 
-		// // 轉換數據為 Golearn 需要的格式
-		// instData := base.NewDenseInstances()
-		// instData.AddAttribute(base.NewFloatAttribute("x"))
-		// instData.AddAttribute(base.NewFloatAttribute("y"))
+			d = append(d, clusters.Coordinates{
+				x,
+				y,
+			})
+		}
 
-		// 	for i := range xValues {
-		// 		instData.AddInstance(base.NewDenseInstance([]float64{xValues[i], yValues[i]}))
-		// 	}
+		// 執行 k-means 演算法
+		km := kmeans.New()
+		clusters, err := km.Partition(d, clusterNum)
 
-		// 	// 使用 K-Means 算法進行聚類
-		// 	cls := cluster.NewKMeans(CLUSTER_NUM)
-		// 	cls.Fit(instData)
+		// 計算每個群組的平均值和標準差
+		for i, c := range clusters {
+			pts := make(plotter.XYs, len(c.Observations))
+			for j, obs := range c.Observations {
+				pts[j].X = obs.Coordinates()[0]
+				pts[j].Y = obs.Coordinates()[1]
+			}
 
-		// 	// 繪製圖表
-		// 	plotClusters(instData, cls, "./data/result_"+strconv.Itoa(multiple)+".png")
+			meanX, meanY, stddevX, stddevY := calculateStatistics(pts)
 
-		// 	// 計時結束
-		// 	elapsed := time.Since(start)
-		// 	fmt.Println("time:", elapsed)
+			fmt.Printf("Group %d:\n", i+1)
+			fmt.Printf("Mean X: %.2f, Mean Y: %.2f\n", meanX, meanY)
+			fmt.Printf("Stddev X: %.2f, Stddev Y: %.2f\n\n", stddevX, stddevY)
+		}
 
-		// 	// 寫入時間數據到 YAML 文件
-		// 	writeTimeData(elapsed, multiple)
-		// } else {
-		// 	fmt.Println("HTTP request failed with status:", response.StatusCode)
-		// }
+		// 繪圖
+		p := plot.New()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		for i, c := range clusters {
+			pts := make(plotter.XYs, len(c.Observations))
+			for j, obs := range c.Observations {
+				pts[j].X = obs.Coordinates()[0]
+				pts[j].Y = obs.Coordinates()[1]
+			}
+
+			s, err := plotter.NewScatter(pts)
+			if err != nil {
+				log.Fatal(err)
+			}
+			s.GlyphStyle.Color = plotutil.Color(i) // 每個分群使用不同顏色
+
+			p.Add(s)
+		}
+
+		// 新增圖片 label
+		p.Title.Text = "K-Means Clustering"
+		p.X.Label.Text = "X"
+		p.Y.Label.Text = "Y"
+
+		// 計時結束
+		end := time.Now()
+
+		// 儲存時間資訊
+		filePath := "./data/time.yaml"
+		if _, err := os.Stat(filePath); os.IsNotExist(err) {
+			os.Create(filePath)
+		}
+		fileContent, _ := os.ReadFile(filePath)
+		data := make(map[string]interface{})
+		yaml.Unmarshal(fileContent, &data)
+		key := fmt.Sprintf("time_%d", multiple)
+		data[key] = (end.Sub(start)).Seconds()
+		yamlData, _ := yaml.Marshal(data)
+		os.WriteFile(filePath, yamlData, 0644)
+
+		imgPath := fmt.Sprintf("data/result_%d.png", multiple)
+		// 儲存圖片
+		if err := p.Save(4*vg.Inch, 4*vg.Inch, imgPath); err != nil {
+			log.Fatal(err)
+		}
+
 	}
 }
 
-// readConfig 讀取配置文件
-
+// 讀取參數的函式
 func readConfig(filePath string) (*Config, error) {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
@@ -110,94 +167,34 @@ func readConfig(filePath string) (*Config, error) {
 	return &config, nil
 }
 
-// Config 包含配置信息的結構體
+// Config struct
 type Config struct {
 	ClusterNum  int `yaml:"CLUSTER_NUM"`
 	NowMultiple int `yaml:"NOW_MULTIPLE"`
 }
 
-// plotClusters 繪製散點圖和聚類中心
-// func plotClusters(instData base.FixedDataGrid, cls *cluster.KMeans, filePath string) {
-// 	plt, err := plot.New()
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
+// 計算統計數據的函式
+func calculateStatistics(pts plotter.XYs) (float64, float64, float64, float64) {
+	var sumX, sumY float64
 
-// 	// 提取 x 和 y 軸數據
-// 	xy, err := base.InstancesToRows(instData)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-
-// 	// 提取每個實例所屬的聚類
-// 	predictions, err := cls.Predict(xy)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-
-// 	// 設置散點圖屬性
-// 	scatter, err := plotter.NewScatter(xy)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	scatter.GlyphStyle.Radius = vg.Points(1)
-// 	scatter.GlyphStyle.Shape = draw.CircleGlyph{}
-// 	scatter.Color = color.RGBA{B: 255, A: 255}
-
-// 	// 將散點圖添加到繪圖區域
-// 	plt.Add(scatter)
-
-// 	// 繪製聚類中心
-// 	centroids := cls.Centroids
-// 	for _, centroid := range centroids {
-// 		centerX := centroid[0]
-// 		centerY := centroid[1]
-
-// 		// 將聚類中心添加到繪圖區域
-// 		point := plotter.NewGlyphPoints(draw.CircleGlyph{})
-// 		point.Color = color.RGBA{R: 255, A: 255}
-// 		point.Add(plotter.XY{X: centerX, Y: centerY})
-// 		plt.Add(point)
-
-// 		// 繪製標準差
-// 		// ...
-
-// 		// 顯示平均值和標準差的數值
-// 		// ...
-// 	}
-
-// 	// 保存圖表為文件
-// 	err = plt.Save(4*vg.Inch, 4*vg.Inch, filePath)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// }
-
-// writeTimeData 寫入時間數據到 YAML 文件
-func writeTimeData(elapsed time.Duration, multiple int) {
-	filePath := "./data/time.yaml"
-
-	// 讀取 YAML 文件
-	data := make(map[string]interface{})
-	yamlData, err := ioutil.ReadFile(filePath)
-	if err == nil {
-		err = yaml.Unmarshal(yamlData, &data)
-		if err != nil {
-			log.Fatal(err)
-		}
+	for _, pt := range pts {
+		sumX += pt.X
+		sumY += pt.Y
 	}
 
-	// 更新時間數據
-	data["time_"+strconv.Itoa(multiple)] = elapsed.Seconds()
+	count := float64(len(pts))
+	meanX := sumX / count
+	meanY := sumY / count
 
-	// 寫入 YAML 文件
-	yamlBytes, err := yaml.Marshal(&data)
-	if err != nil {
-		log.Fatal(err)
+	// 計算標準差
+	var sumSqX, sumSqY float64
+	for _, pt := range pts {
+		sumSqX += (pt.X - meanX) * (pt.X - meanX)
+		sumSqY += (pt.Y - meanY) * (pt.Y - meanY)
 	}
 
-	err = ioutil.WriteFile(filePath, yamlBytes, 0644)
-	if err != nil {
-		log.Fatal(err)
-	}
+	stddevX := math.Sqrt(sumSqX / count)
+	stddevY := math.Sqrt(sumSqY / count)
+
+	return meanX, meanY, stddevX, stddevY
 }

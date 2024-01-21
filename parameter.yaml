@@ -3,4 +3,4 @@ MIN_POINTS: 1  # 每個群的最小資料點數量
 MAX_POINTS: 100  # 每個群的最大資料點數量
 SPACE_SIZE: 100  # 定義分布空間大小
 DATA_MAXSIZE_MULTIPLE: 100  # 設定產生的資料集最大是原本的幾倍
-NOW_MULTIPLE: 1 # 設定 kmean 算法採用的資料集大小
+NOW_MULTIPLE: 10000 # 設定 kmean 算法採用的資料集大小

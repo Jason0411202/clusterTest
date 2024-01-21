@@ -34,3 +34,7 @@
 
 # Go
 * go version go1.21.4 windows/amd64
+* 分群演算法採用kmeans演算法
+* Go 感覺在資料分析這塊的社群不太大，沒有像 python 有有名的 package 專門用來做資料分析
+* 使用 "github.com/muesli/kmeans" 進行 kmeans 分析，這是目前找到包得最好的 package
+* 使用 "gonum.org/v1/plot" 進行繪圖

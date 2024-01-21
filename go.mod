@@ -15,6 +15,7 @@ require (
 	github.com/google/go-cmp v0.5.8 // indirect
 	github.com/guptarohit/asciigraph v0.5.1 // indirect
 	github.com/mattn/go-runewidth v0.0.7 // indirect
+	github.com/muesli/clusters v0.0.0-20180605185049-a07a36e67d36 // indirect
 	github.com/olekukonko/tablewriter v0.0.4 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rocketlaunchr/dataframe-go v0.0.0-20201007021539-67b046771f0b // indirect
@@ -29,6 +30,7 @@ require (
 	github.com/labstack/gommon v0.4.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
+	github.com/muesli/kmeans v0.3.1
 	github.com/sjwhitworth/golearn v0.0.0-20221228163002-74ae077eafb2
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
