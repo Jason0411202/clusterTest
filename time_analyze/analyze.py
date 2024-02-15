@@ -9,12 +9,15 @@ for i in range(len(filePath)):
     with open(filePath[i], 'r') as file:
         data = yaml.safe_load(file)
     times, values = zip(*data.items())
+    times=[]
+    for j in range(5):
+        times.append(str(10**j)+" time")
     values = [float(val) for val in values]
     plt.plot(times, values, label=language[i])
 
 plt.title('time analyze')
-plt.xlabel('time')
-plt.ylabel('value')
+plt.xlabel('Data Set Magnitude')
+plt.ylabel('Processing Time')
 plt.legend()
 plt.xticks(rotation=45)
 plt.grid(True)
